@@ -1,11 +1,4 @@
----
-title: 'Reproducible Research: Peer Assessment 1'
-output:
-  html_document:
-    keep_md: yes
-  pdf_document: default
-  word_document: default
----
+# Reproducible Research: Peer Assessment 1
 
 
 <center>*by Andrei Ivanov (July, 2017)*</center>
@@ -18,14 +11,16 @@ It is now possible to collect a large amount of data about personal movement usi
 
 The ***DataSetRaw*** is stored in a comma-separated-value (CSV) file:
 
-```{r}
+
+```r
 DataSetFile <- "activity.csv"
 ```
 
-which should be located in the current working directory. If the file **`r DataSetFile`** not downloaded yet, the following code will load the [Activity monitoring data [52K]](https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip) from the course web site. It will also extracts its contents:
+which should be located in the current working directory. If the file **activity.csv** not downloaded yet, the following code will load the [Activity monitoring data [52K]](https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip) from the course web site. It will also extracts its contents:
 
 
-```{r}
+
+```r
 if (!file.exists(DataSetFile)) {
     fileUrl <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
     temp <- tempfile()
@@ -36,27 +31,29 @@ if (!file.exists(DataSetFile)) {
 ```
 
 The loading of ***DataSetRaw*** is done by:
-```{r}
+
+```r
 DataSetRaw <- read.csv(DataSetFile, stringsAsFactors=F)
 ```
 
 
 The variables included in the ***DataSetRaw*** are:
 
-* **`r names(DataSetRaw)[1]`**: Number of steps taking in a 5-minute interval (missing values are coded as NA)
-* **`r names(DataSetRaw)[2]`**: The date on which the measurement was taken in YYYY-MM-DD format
-* **`r names(DataSetRaw)[3]`**: Identifier for the 5-minute interval in which measurement was taken
+* **steps**: Number of steps taking in a 5-minute interval (missing values are coded as NA)
+* **date**: The date on which the measurement was taken in YYYY-MM-DD format
+* **interval**: Identifier for the 5-minute interval in which measurement was taken
 
-There are **`r nrow(DataSetRaw)`** observations in the ***DataSetRaw***  
+There are **17568** observations in the ***DataSetRaw***  
 
 
 Let's remove all observations, which has no data in at least one column:
 
-```{r}
+
+```r
 DataSet <- na.omit(DataSetRaw)
 ```
 
-As we could see, the ***DataSet*** contains **`r nrow(DataSet)`** observations. 
+As we could see, the ***DataSet*** contains **15264** observations. 
 
 
 ## What is mean total number of steps taken per day?
@@ -68,7 +65,8 @@ Following function ***drawHistogram*** will
 * return a vector of total number of steps for each day.
 
 
-```{r}
+
+```r
 library(data.table)
 
 drawHistogram <- function(dataSet, color, actionOnData) {
@@ -87,21 +85,25 @@ drawHistogram <- function(dataSet, color, actionOnData) {
 ```
 
 The histogram is created by following call of the function ***drawHistogram***:
-```{r}
+
+```r
 StepsByDay <- drawHistogram(DataSet, "blue", "ignored")
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
+
 
 The **"Mean"** and the **"Median"** values are calculated as 
-```{r}
+
+```r
 meanVal <- mean(StepsByDay)
 medianVal <- median(StepsByDay)
 ```
 
 and their values are:
 
-* Mean:     **`r meanVal`** 
-* Median:   **`r medianVal`**
+* Mean:     **1.0766189\times 10^{4}** 
+* Median:   **10765**
 
 
 ## What is the average daily activity pattern?  
@@ -112,24 +114,30 @@ Here is the R-code for
 * ploting the Average Number of Steps for each interval;
 * determination of the interval with the most average steps.
  
-```{r}
+
+```r
 stepsByInterval <- aggregate(steps ~ interval, DataSet, mean)
 
 with (stepsByInterval, plot(interval, steps, type="l", col="blue",
                             xlab="Interval", 
                             ylab="Number of Steps", 
                             main="Average Number of Steps for the Intervals"))
+```
 
+![](PA1_template_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
+
+```r
 maxAveInterval <- stepsByInterval[which.max(stepsByInterval$steps), ]
 ```
 
-The interval **`r maxAveInterval$interval`** has the maximum average value of steps: **`r maxAveInterval$steps`**.
+The interval **835** has the maximum average value of steps: **206.1698113**.
 
 
 ## Imputing missing values
 
-The total number of rows with NA's is **`r sum(is.na(DataSetRaw))`** could be defined as:  
-```{r results='hide'}
+The total number of rows with NA's is **2304** could be defined as:  
+
+```r
 sum(is.na(DataSetRaw))
 ```
 
@@ -137,28 +145,33 @@ Let's construct a new dataset (***DataSetImputed***) by imputing the missing dat
 
 Since this task required the use of only a simple calculation method for imputation of missing data, we will use the average value for each interval rounded to the nearest integer.
 
-```{r}
+
+```r
 DataSetImputed <- with (DataSetRaw, 
                         transform(DataSetRaw, 
                              steps = ifelse(is.na(steps), as.integer(stepsByInterval$steps + 0.5), steps)))
 ```
 
 Let's construct a hystogram for ***DataSetImputed*** by calling previously created function ***drawHistogram***:
-```{r}
+
+```r
 StepsByDayImp <- drawHistogram(DataSetImputed, "green", "imputed")
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-11-1.png)<!-- -->
+
 
 ... and compute **"Mean"** and the **"Median"** values for ***StepsByDayImp***:
-```{r}
+
+```r
 meanValImputed <- mean(StepsByDayImp)
 medianValImputed <- median(StepsByDayImp)
 ```
 
 As we could see, the values of **"Mean"** and **"Median"** did not change much:  
 
-* Mean:     **`r meanValImputed`** vs. **`r meanVal`**. The change is only **`r 100 * (meanVal - meanValImputed)/meanVal`%**.
-* Median:   **`r medianValImputed`** vs. **`r medianVal`** The change is only **`r 100 * (medianVal - medianValImputed)/medianVal`%**.
+* Mean:     **1.0765639\times 10^{4}** vs. **1.0766189\times 10^{4}**. The change is only **0.0051024%**.
+* Median:   **10762** vs. **10765** The change is only **0.0278681%**.
 
 
 
@@ -166,7 +179,8 @@ As we could see, the values of **"Mean"** and **"Median"** did not change much:
 
 To investigate the differences in activity patterns between weekdays and weekends, we will create a new factor variable ***dayType*** in the ***DataSet***
 
-```{r}
+
+```r
 dayType <- function(date) {
     ifelse (weekdays(date) %in% c("Saturday", "Sunday"), "Weekend", "Weekday")
 }
@@ -176,7 +190,8 @@ DataSet$dayType <- sapply(as.Date(DataSet$date), FUN = dayType)
 
 Let's make a panel plot containing a time series plot of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis).
 
-```{r}
+
+```r
 stepsByInterval <- aggregate(steps ~ interval + dayType, DataSet, mean)
 
 library(lattice)
@@ -188,3 +203,5 @@ with (stepsByInterval,
             ylab = "Number of Steps")
      )
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-14-1.png)<!-- -->
